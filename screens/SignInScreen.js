@@ -11,25 +11,35 @@ import {
   Button,
   ImageBackground,
   TouchableWithoutFeedback,
+  WebView,
+  TextInput,
+  Animated,
+  Easing
 } from 'react-native';
 
 import { Font } from 'expo';
-import YouTube from 'react-native-youtube';
 
 
 import Dimensions from 'Dimensions';
 var { width, height } = Dimensions.get('window');
 
+const api = 'http://192.168.128.215:5000/';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#fff'
   },
   slideContainer: {
     backgroundColor: 'black'
   },
   backgroundImage: {
         flex: 1,
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: 0,
+        right: 0
   },
   slide: {
     flex: 1,
@@ -37,6 +47,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%'
   },
+  /*
+    Buttons
+  */
   buttonContainer: {
     position: 'absolute',
     bottom: 120,
@@ -63,6 +76,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#2a95f1",
     marginLeft: 15
   },
+  getStartedCompleteBtn: {
+    width: 158,
+    height: 49,
+    borderRadius: 4,
+    backgroundColor: "#2a95f1",
+    marginLeft: 15,
+    marginTop: 20
+  },
+  signInCompleteBtn: {
+    width: 158,
+    height: 49,
+    borderRadius: 4,
+    backgroundColor: "#2a95f1",
+    marginLeft: 15,
+    marginTop: 20
+  },
   buttonText: {
     color: 'white',
     textAlign: 'center',
@@ -70,6 +99,45 @@ const styles = StyleSheet.create({
     fontFamily: "NunitoSans",
     fontSize: 18,
     letterSpacing: 0.34,
+  },
+  /*
+    Forms
+  */
+  signInForm: {
+    height: 300,
+    width: null,
+    alignItems: 'center',
+    marginTop: 100
+  },
+  input: {
+    width: 200,
+    height: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: 'white',
+    marginBottom: 10,
+    fontFamily: "NunitoSans",
+    fontSize: 14,
+    fontWeight: "normal",
+    fontStyle: "normal",
+    letterSpacing: 0.45,
+    color: "#5bd9fb"
+  },
+  heading: {
+    fontFamily: "NunitoSans",
+    fontSize: 36,
+    fontWeight: "normal",
+    fontStyle: "normal",
+    letterSpacing: 0.45,
+    textAlign: "center",
+    color: "#ffffff"
+  },
+  label: {
+    fontFamily: "NunitoSans",
+    fontSize: 14,
+    fontWeight: "normal",
+    fontStyle: "normal",
+    letterSpacing: 0.45,
+    color: "#ffffff"
   }
 });
 
@@ -79,29 +147,20 @@ class SignInButtons extends React.Component {
     return (
       <View style={styles.buttonContainer}>
               <TouchableOpacity  style={styles.signInBtn}>
-                <Text style={styles.buttonText} onPress={this._signInAsync}>Sign In</Text>
+                <Text style={styles.buttonText} onPress={this.props.goToSignIn.bind(this)}>Sign In</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.getStartedBtn}>
-                <Text style={styles.buttonText} onPress={this._signInAsync}>Get Started</Text>
+                <Text style={styles.buttonText} onPress={this.props.goToGetStarted.bind(this)}>Get Started</Text>
               </TouchableOpacity>
             </View>
     );
   }
 }
 
-export default class SignInScreen extends React.Component {
-  static navigationOptions = {
-    title: 'Please sign in',
-  };
+class Slideshow extends React.Component {
 
   constructor() {
     super();
-
-    this.state = {
-      hasSeenSlideshow: false,
-      currentSlideIndex: 0,
-      fontsLoaded: false
-    }
 
     this.slides = [
       require("../assets/images/slides/SplashScreenLivingRoom.png"),
@@ -109,6 +168,67 @@ export default class SignInScreen extends React.Component {
       require("../assets/images/slides/SplashScreenMarketingassets.png"),
       require("../assets/images/slides/SplashScreenVideo.png")
     ];
+
+    this.state = {
+      currentSlideIndex: 0
+    };
+  }
+
+  nextSlide() {
+    if (this.state.currentSlideIndex < this.slides.length - 1) {
+      this.setState(prevState => {
+        return { currentSlideIndex: prevState.currentSlideIndex + 1};
+      });
+    }
+  }
+
+  render() {
+
+      let signInButtons = null;
+      if (this.props.fontsLoaded) {
+        signInButtons = (<SignInButtons goToSignIn={this.props.goToSignIn.bind(this)} goToGetStarted={this.props.goToGetStarted.bind(this) } />);
+      }
+      let video = null;
+      if (this.state.currentSlideIndex == 3) {
+
+        video = (
+          <View style={{position: 'absolute', top: 400, left: 0, right: 0, alignItems: 'center'}}>
+          <WebView
+              style={{flex: 1, width: 200, height: 120}}
+              javaScriptEnabled={true}
+              scalesPageToFit={false}
+              source={{uri: 'https://www.youtube.com/embed/4YFGy4B0SFI?rel=0&autoplay=0&showinfo=0&controls=0'}}
+          />
+          </View>);
+      }
+
+      return (
+          <View style={StyleSheet.flatten([styles.container, styles.slideContainer])}>
+            <TouchableWithoutFeedback onPress={this.nextSlide.bind(this)}>
+              <Image style={styles.slide} source={this.slides[this.state.currentSlideIndex]}></Image>
+            </TouchableWithoutFeedback>
+            {video} 
+            {signInButtons}
+          </View>
+        );
+    }
+}
+
+export default class SignInScreen extends React.Component {
+  static navigationOptions = {
+    title: 'Welcome to Walkthrough',
+  };
+
+  constructor() {
+    super();
+
+    this.state = {
+      hasSeenSlideshow: false,
+      fontsLoaded: false,
+      isNewUser: false
+    }
+
+    this.animateValue = new Animated.Value(0);
   }
 
   async componentDidMount() {
@@ -119,57 +239,123 @@ export default class SignInScreen extends React.Component {
     this.setState(prevState => { return {fontsLoaded: true} });
   }
 
-  _nextSlide() {
-    this.setState(prevState => {
-      return { currentSlideIndex: prevState.currentSlideIndex + 1};
+  goToSignIn() {
+    this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: false} });
+  }
+
+  goToGetStarted() {
+    this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: true} });
+  }
+
+  completeSignIn() {
+    this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: false} });
+    this.slideUp();
+  }
+
+  completeGetStarted() {
+    this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: true} });
+    fetch(`${api}/people`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: this.usernameInput.value,
+        password: this.passwordInput.value,
+      }),
     });
 
-    if (this.state.currentSlideIndex >= this.slides.length - 1) {
-      this.setState(prevState => {
-        return { hasSeenSlideshow: true };
-      });
+    this.slideUp();
+  }
+
+  getUserForm() {
+    let userForm;
+
+    if (this.state.isNewUser) {
+      userForm = (
+          <View style={styles.signInForm}>
+            <Text style={styles.heading}>Let's Get Started</Text>
+            <View style={{marginTop:60}}>
+              <Text style={styles.label}>Choose a username</Text>
+              <TextInput style={styles.input} ref={ref => {this.usernameInput = ref}} />
+              <Text style={styles.label}>Choose a password</Text>
+              <TextInput style={styles.input} ref={ref => {this.passwordInput = ref}} />
+              <TouchableOpacity style={styles.getStartedCompleteBtn} onPress={this.completeGetStarted.bind(this)}>
+                <Text style={styles.buttonText}>Finish</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
+
+    } else {
+      userForm = (
+          <View style={styles.signInForm}>
+            <Text style={styles.heading}>Welcome back</Text>
+            <View style={{marginTop:60}}>
+              <Text style={styles.label}>Username</Text>
+              <TextInput style={styles.input} ref={ref => {this.usernameInput = ref}} />
+              <Text style={styles.label}>Password</Text>
+              <TextInput style={styles.input} ref={ref => {this.passwordInput = ref}} />
+              <TouchableOpacity style={styles.signInCompleteBtn} onPress={this.completeSignIn.bind(this)}>
+                <Text style={styles.buttonText}>Finish</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        );
     }
+
+    return userForm;
+  }
+
+  slideUp () {
+    this.animateValue.setValue(0);
+    Animated.timing(
+      this.animateValue,
+      {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.ease
+      }
+    ).start(() => {});
   }
 
   render() {
     if (!this.state.hasSeenSlideshow) {
-    
-      let signInButtons = null;
-      if (this.state.fontsLoaded) {
-        signInButtons = (<SignInButtons />);
-      }
-      let video = null;
-      if (this.state.currentSlideIndex == 3) {
-
-        video = (
-          <YouTube
-            videoId={'4YFGy4B0SFI'}
-            apiKey={'AIzaSyAoeSFkUuzUcO00Em_C9NzhqZLrurK2ziM'}
-            style={{ alignSelf: 'stretch', height: 200 }}
-          />);
-      }
-
-      return (
-          <View style={StyleSheet.flatten([styles.container, styles.slideContainer])}>
-            <TouchableWithoutFeedback onPress={this._nextSlide.bind(this)}>
-              <Image style={styles.slide} source={this.slides[this.state.currentSlideIndex]}></Image>
-            </TouchableWithoutFeedback>
-            {video}
-            {signInButtons}
-          </View>
-        )
+        return (<Slideshow 
+          goToSignIn={this.goToSignIn.bind(this)}
+          goToGetStarted={this.goToGetStarted.bind(this)}
+          fontsLoaded={this.state.fontsLoaded}
+        />);
     }
 
     let signInButtons = null;
     if (this.state.fontsLoaded) {
-      signInButtons = (<SignInButtons />);
+      signInButtons = (<SignInButtons goToSignIn={this.goToSignIn.bind(this)} goToGetStarted={this.goToGetStarted.bind(this) } />);
     }
+
+    let userForm = this.getUserForm();
+
+    // for animating slides
+    let translateY = this.animateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, -1000],
+      useNativeDriver: true
+    });
+
+    let userFormStyle = StyleSheet.flatten([styles.backgroundImage, /*{transform:[{translateY:translateY}]}*/]);
+    let mapFormStyle = StyleSheet.flatten([styles.backgroundImage, /*{transform:[{translateY:translateY}]}*/]);
 
     return (
       <View style={styles.container}>
-        <ImageBackground style={styles.backgroundImage} source={require("../assets/images/bg.png")}>
-          { signInButtons }
+        <ImageBackground style={mapFormStyle} source={require("../assets/images/bg.png")}>
+
         </ImageBackground>
+        <Animated.View style={StyleSheet.flatten([styles.backgroundImage, {transform:[{translateY:translateY}]}])}>
+          <ImageBackground style={styles.backgroundImage} source={require("../assets/images/bg.png")}>
+          { userForm }
+          </ImageBackground>
+        </Animated.View>
       </View>
     );
   }
