@@ -23,7 +23,7 @@ import { Font } from 'expo';
 import Dimensions from 'Dimensions';
 var { width, height } = Dimensions.get('window');
 
-const api = 'http://192.168.128.215:5000/';
+const api = 'http://localhost:5000/';
 
 const styles = StyleSheet.create({
   container: {
@@ -225,7 +225,9 @@ export default class SignInScreen extends React.Component {
     this.state = {
       hasSeenSlideshow: false,
       fontsLoaded: false,
-      isNewUser: false
+      isNewUser: false,
+      username: '',
+      password: ''
     }
 
     this.animateValue = new Animated.Value(0);
@@ -252,21 +254,55 @@ export default class SignInScreen extends React.Component {
     this.slideUp();
   }
 
+  validate() {
+    return this.state.username
+      && this.state.password1
+      && this.state.password1 === this.state.password2;
+  }
+
   completeGetStarted() {
+    if (!this.validate()) { return false; }
+
     this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: true} });
-    fetch(`${api}/people`, {
+    fetch(`${api}people`, {
       method: 'POST',
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        username: this.usernameInput.value,
-        password: this.passwordInput.value,
+        username: this.state.username,
+        password: this.state.password1,
       }),
     });
 
     this.slideUp();
+  }
+
+  getUsernameField() {
+    return (<TextInput
+                autoCapitalize={'none'}
+                autoCorrect={false}
+                autoFocus={true}
+                style={styles.input}
+                onChangeText={(text)=>{this.setState({username:text})}}/>);
+  }
+
+  getPasswordField(isSecond) {
+    
+    var changeTextKey = 'password'+(isSecond?2:1);
+    let onChangeText = (text) => {
+      let stateUpdate = {};
+      stateUpdate[changeTextKey] = text;
+      this.setState(stateUpdate);
+    };
+
+    return (<TextInput
+                autoCapitalize={'none'}
+                autoCorrect={false}
+                secureTextEntry={true}
+                style={styles.input}
+                onChangeText={onChangeText} />);
   }
 
   getUserForm() {
@@ -278,9 +314,11 @@ export default class SignInScreen extends React.Component {
             <Text style={styles.heading}>Let's Get Started</Text>
             <View style={{marginTop:60}}>
               <Text style={styles.label}>Choose a username</Text>
-              <TextInput style={styles.input} ref={ref => {this.usernameInput = ref}} />
+              {this.getUsernameField()}
               <Text style={styles.label}>Choose a password</Text>
-              <TextInput style={styles.input} ref={ref => {this.passwordInput = ref}} />
+              {this.getPasswordField()}
+              <Text style={styles.label}>Confirm Password</Text>
+              {this.getPasswordField(true)}
               <TouchableOpacity style={styles.getStartedCompleteBtn} onPress={this.completeGetStarted.bind(this)}>
                 <Text style={styles.buttonText}>Finish</Text>
               </TouchableOpacity>
@@ -294,9 +332,9 @@ export default class SignInScreen extends React.Component {
             <Text style={styles.heading}>Welcome back</Text>
             <View style={{marginTop:60}}>
               <Text style={styles.label}>Username</Text>
-              <TextInput style={styles.input} ref={ref => {this.usernameInput = ref}} />
+              {this.getUsernameField()}
               <Text style={styles.label}>Password</Text>
-              <TextInput style={styles.input} ref={ref => {this.passwordInput = ref}} />
+              {this.getPasswordField()}
               <TouchableOpacity style={styles.signInCompleteBtn} onPress={this.completeSignIn.bind(this)}>
                 <Text style={styles.buttonText}>Finish</Text>
               </TouchableOpacity>
