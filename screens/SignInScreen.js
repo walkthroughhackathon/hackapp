@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   */
   buttonContainer: {
     position: 'absolute',
-    bottom: 120,
+    bottom: '5%',
     left: 0,
     right: 0,
     height: null,
@@ -263,7 +263,6 @@ export default class SignInScreen extends React.Component {
   completeGetStarted() {
     if (!this.validate()) { return false; }
 
-    this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: true} });
     fetch(`${api}people`, {
       method: 'POST',
       headers: {
@@ -274,9 +273,12 @@ export default class SignInScreen extends React.Component {
         username: this.state.username,
         password: this.state.password1,
       }),
+    }).then(() => {
+      this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: true} });
+      this.slideUp();
+    }).catch(() => {
+      alert('Unable to connect')
     });
-
-    this.slideUp();
   }
 
   getUsernameField() {
