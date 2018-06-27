@@ -229,8 +229,6 @@ export default class SignInScreen extends React.Component {
       username: '',
       password: ''
     }
-
-    this.animateValue = new Animated.Value(0);
   }
 
   async componentDidMount() {
@@ -251,7 +249,9 @@ export default class SignInScreen extends React.Component {
 
   completeSignIn() {
     this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: false} });
-    this.slideUp();
+
+    const { navigate } = this.props.navigation;
+    navigate('App');
   }
 
   validate() {
@@ -275,7 +275,8 @@ export default class SignInScreen extends React.Component {
       }),
     }).then(() => {
       this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: true} });
-      this.slideUp();
+      const { navigate } = this.props.navigation;
+      navigate('App');
     }).catch(() => {
       alert('Unable to connect')
     });
@@ -348,18 +349,6 @@ export default class SignInScreen extends React.Component {
     return userForm;
   }
 
-  slideUp () {
-    this.animateValue.setValue(0);
-    Animated.timing(
-      this.animateValue,
-      {
-        toValue: 1,
-        duration: 500,
-        easing: Easing.ease
-      }
-    ).start(() => {});
-  }
-
   render() {
     if (!this.state.hasSeenSlideshow) {
         return (<Slideshow 
@@ -375,23 +364,11 @@ export default class SignInScreen extends React.Component {
     }
 
     let userForm = this.getUserForm();
-
-    // for animating slides
-    let translateY = this.animateValue.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, -1000],
-      useNativeDriver: true
-    });
-
     let userFormStyle = StyleSheet.flatten([styles.backgroundImage, /*{transform:[{translateY:translateY}]}*/]);
-    let mapFormStyle = StyleSheet.flatten([styles.backgroundImage, /*{transform:[{translateY:translateY}]}*/]);
 
     return (
       <View style={styles.container}>
-        <ImageBackground style={mapFormStyle} source={require("../assets/images/bg.png")}>
-
-        </ImageBackground>
-        <Animated.View style={StyleSheet.flatten([styles.backgroundImage, {transform:[{translateY:translateY}]}])}>
+        <Animated.View style={styles.backgroundImage}>
           <ImageBackground style={styles.backgroundImage} source={require("../assets/images/bg.png")}>
           { userForm }
           </ImageBackground>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Notifications } from 'expo';
-import { createSwitchNavigator } from 'react-navigation';
+import { Animated, Easing } from 'react-native';
+import { createSwitchNavigator, createStackNavigator } from 'react-navigation';
 
 import MainTabNavigator from './MainTabNavigator';
 import registerForPushNotificationsAsync from '../api/registerForPushNotificationsAsync';
@@ -8,13 +9,33 @@ import SignInScreen from '../screens/SignInScreen';
 
 
 
-const AppNavigator = createSwitchNavigator({
+const AppNavigator = createStackNavigator({
   // You could add another route here for authentication.
   // Read more at https://reactnavigation.org/docs/en/auth-flow.html
   App: MainTabNavigator,
   Auth: SignInScreen,
 }, {
+    headerMode: 'none',
     initialRouteName: 'Auth',
+    transitionConfig: () => ({
+      transitionSpec: {
+        duration: 300,
+        easing: Easing.out(Easing.poly(4)),
+        timing: Animated.timing,
+      },
+      screenInterpolator: sceneProps => {
+        const { layout, position, scene } = sceneProps;
+        const { index } = scene;
+
+        const height = layout.initHeight;
+        const translateY = position.interpolate({
+          inputRange: [index - 1, index, index + 1],
+          outputRange: [height, 0, 0],
+        });
+
+       return { transform: [{ translateY }] };
+      }
+    })
 });
 
 export default class RootNavigation extends React.Component {
