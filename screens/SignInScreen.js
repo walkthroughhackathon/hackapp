@@ -192,7 +192,7 @@ class Slideshow extends React.Component {
       if (this.state.currentSlideIndex == 3) {
 
         video = (
-          <View style={{position: 'absolute', top: 400, left: 0, right: 0, alignItems: 'center'}}>
+          <View style={{position: 'absolute', top: '50%', left: 0, right: 0, alignItems: 'center'}}>
           <WebView
               style={{flex: 1, width: 200, height: 120}}
               javaScriptEnabled={true}
@@ -237,6 +237,11 @@ export default class SignInScreen extends React.Component {
     });
 
     this.setState(prevState => { return {fontsLoaded: true} });
+
+    if (await Expo.SecureStore.getItemAsync('userToken')) {
+      const { navigate } = this.props.navigation;
+      navigate('App')
+    }
   }
 
   goToSignIn() {
@@ -250,6 +255,8 @@ export default class SignInScreen extends React.Component {
   completeSignIn() {
     this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: false} });
 
+    Expo.SecureStore.setItemAsync('userToken', '123456789');
+    
     const { navigate } = this.props.navigation;
     navigate('App');
   }
@@ -275,6 +282,9 @@ export default class SignInScreen extends React.Component {
       }),
     }).then(() => {
       this.setState(prevState => { return {hasSeenSlideshow: true, isNewUser: true} });
+
+      Expo.SecureStore.setItemAsync('userToken', '123456789');
+
       const { navigate } = this.props.navigation;
       navigate('App');
     }).catch(() => {

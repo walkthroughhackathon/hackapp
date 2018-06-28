@@ -7,9 +7,11 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ImageBackground
+  ImageBackground,
+  TextInput,
+  WebView
 } from 'react-native';
-import { WebBrowser } from 'expo';
+import { WebBrowser, Font } from 'expo';
 
 import { MonoText } from '../components/StyledText';
 
@@ -18,22 +20,55 @@ export default class HomeScreen extends React.Component {
     header: null,
   };
 
+  constructor() {
+    super();
+    this.state = {
+      fontsLoaded: false,
+      addressSearch: ''
+    };
+  }
+
+  async componentDidMount() {
+    await Font.loadAsync({
+      'NunitoSans': require('../assets/fonts/NunitoSans-Regular.ttf'),
+    });
+
+    this.setState(prevState => { return {fontsLoaded: true} });
+  }
+
+  addressOnChangeText(text) {
+    this.setState(prevState => {addressSearch:text});
+  }
+
   render() {
+
+    let form = this.state.fontsLoaded ? (<View style={styles.form}>
+                <Text style={styles.heading}>List your property</Text>
+                <View style={{marginTop:10}}>
+                  <Text style={styles.label}>Enter an Address</Text>
+                  <TextInput
+                    autoCapitalize={'none'}
+                    autoCorrect={false}
+                    secureTextEntry={true}
+                    style={styles.input}
+                    onChangeText={this.addressOnChangeText.bind(this)} />
+                </View>
+                <View style={{position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center'}}>
+                  <WebView
+                    style={{flex: 1, width: 380, height: 400}}
+                    javaScriptEnabled={true}
+                    scalesPageToFit={false}
+                    source={{uri:'https://goo.gl/maps/Y5Dotxas7xL2'}}
+                  />
+              </View>
+              </View>) : null;
     return (
       <View style={styles.container}>
           <View style={styles.container}>
             <ImageBackground style={styles.backgroundImage} source={require("../assets/images/bg.png")}>
+              {form}
             </ImageBackground>
           </View>
-      
-
-        <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
-        </View>
       </View>
     );
   }
@@ -166,5 +201,43 @@ const styles = StyleSheet.create({
   helpLinkText: {
     fontSize: 14,
     color: '#2e78b7',
+  },
+
+
+  form: {
+    height: 300,
+    width: null,
+    alignItems: 'center',
+    marginTop: 100
+  },
+  heading: {
+    fontFamily: "NunitoSans",
+    fontSize: 36,
+    fontWeight: "normal",
+    fontStyle: "normal",
+    letterSpacing: 0.45,
+    textAlign: "center",
+    color: "#ffffff"
+  },
+  label: {
+    fontFamily: "NunitoSans",
+    fontSize: 14,
+    fontWeight: "normal",
+    fontStyle: "normal",
+    letterSpacing: 0.45,
+    color: "#ffffff"
+  },
+  input: {
+    width: 200,
+    height: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: 'white',
+    marginBottom: 10,
+    fontFamily: "NunitoSans",
+    fontSize: 14,
+    fontWeight: "normal",
+    fontStyle: "normal",
+    letterSpacing: 0.45,
+    color: "#5bd9fb"
   },
 });
