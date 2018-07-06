@@ -44,7 +44,7 @@ export default class HomeScreen extends React.Component {
 
   render() {
     alert(this.state.addressSearch)
-    let iframe = `<iframe width="600" height="450" frameborder="0" style="border:0"src="https://www.google.com/maps/embed/v1/place?q=${this.state.addressSearch}&key=AIzaSyDBr9mZ--WlLQ0xD_LY5ZWVGei173A3m0Y" allowfullscreen></iframe>`;
+    let iframe = `<iframe width="600" height="450" frameborder="0" style="border:0"src="https://www.google.com/maps/embed/v1/place?q=${this.state.addressSearch}&key=${env.GOOGLE_MAPS_EMBED_APIKEY}" allowfullscreen></iframe>`;
     let form = this.state.fontsLoaded ? (<View style={styles.form}>
                 <Text style={styles.heading}>List your property</Text>
                 <View style={{marginTop:10}}>
