@@ -16,6 +16,7 @@ import {
   Animated,
   Easing
 } from 'react-native';
+import { GestureHandler } from 'expo'
 
 import { Font } from 'expo';
 
@@ -206,6 +207,7 @@ class Slideshow extends React.Component {
           <View style={StyleSheet.flatten([styles.container, styles.slideContainer])}>
             <TouchableWithoutFeedback onPress={this.nextSlide.bind(this)}>
               <Image style={styles.slide} source={this.slides[this.state.currentSlideIndex]}></Image>
+              
             </TouchableWithoutFeedback>
             {video} 
             {signInButtons}

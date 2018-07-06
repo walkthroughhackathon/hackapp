@@ -24,8 +24,9 @@ export default class HomeScreen extends React.Component {
     super();
     this.state = {
       fontsLoaded: false,
-      addressSearch: ''
+      addressSearch: '3911%20zuni%20st'
     };
+    this.mapRef;
   }
 
   async componentDidMount() {
@@ -37,11 +38,13 @@ export default class HomeScreen extends React.Component {
   }
 
   addressOnChangeText(text) {
-    this.setState(prevState => {addressSearch:text});
+    this.mapRef && this.mapRef.reload();
+    // this.setState(prevState => {addressSearch:encodeURIComponent(text)});
   }
 
   render() {
-
+    alert(this.state.addressSearch)
+    let iframe = `<iframe width="600" height="450" frameborder="0" style="border:0"src="https://www.google.com/maps/embed/v1/place?q=${this.state.addressSearch}&key=AIzaSyDBr9mZ--WlLQ0xD_LY5ZWVGei173A3m0Y" allowfullscreen></iframe>`;
     let form = this.state.fontsLoaded ? (<View style={styles.form}>
                 <Text style={styles.heading}>List your property</Text>
                 <View style={{marginTop:10}}>
@@ -49,16 +52,16 @@ export default class HomeScreen extends React.Component {
                   <TextInput
                     autoCapitalize={'none'}
                     autoCorrect={false}
-                    secureTextEntry={true}
                     style={styles.input}
                     onChangeText={this.addressOnChangeText.bind(this)} />
                 </View>
                 <View style={{position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center'}}>
                   <WebView
+                    ref={ wv => this.mapRef = wv}
                     style={{flex: 1, width: 380, height: 400}}
                     javaScriptEnabled={true}
                     scalesPageToFit={false}
-                    source={{uri:'https://goo.gl/maps/Y5Dotxas7xL2'}}
+                    source={{html:iframe}}
                   />
               </View>
               </View>) : null;
