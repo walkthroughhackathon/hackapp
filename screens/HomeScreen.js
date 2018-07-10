@@ -12,6 +12,7 @@ import {
   WebView
 } from 'react-native';
 import { WebBrowser, Font } from 'expo';
+import { GOOGLE_MAPS_EMBED_APIKEY } from 'react-native-dotenv'
 
 import { MonoText } from '../components/StyledText';
 
@@ -38,13 +39,20 @@ export default class HomeScreen extends React.Component {
   }
 
   addressOnChangeText(text) {
-    this.mapRef && this.mapRef.reload();
-    // this.setState(prevState => {addressSearch:encodeURIComponent(text)});
+    // this.mapRef && this.mapRef.reload();
+    this.setState(prevState => ({addressSearch:text}));
+    
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => {
+      if (this.state.addressSearch.length > 3) {
+        this.setState(prevState => ({mapSource:`<iframe width="400" height="300" frameborder="0" style="border:0"src="https://www.google.com/maps/embed/v1/place?q=${this.state.addressSearch}&key=${GOOGLE_MAPS_EMBED_APIKEY}" allowfullscreen></iframe>`}));
+      }
+    }, 1000);
   }
 
   render() {
-    alert(this.state.addressSearch)
-    let iframe = `<iframe width="600" height="450" frameborder="0" style="border:0"src="https://www.google.com/maps/embed/v1/place?q=${this.state.addressSearch}&key=${env.GOOGLE_MAPS_EMBED_APIKEY}" allowfullscreen></iframe>`;
+    // let iframe = `<iframe width="600" height="450" frameborder="0" style="border:0"src="https://www.google.com/maps/embed/v1/place?q=${this.state.addressSearch}&key=${GOOGLE_MAPS_EMBED_APIKEY}" allowfullscreen></iframe>`;
+    // let iframe = `<iframe width="600" height="450" frameborder="0" style="border:0"src="https://fbbt-upload.gardenhouse.io/" allowfullscreen></iframe>`;
     let form = this.state.fontsLoaded ? (<View style={styles.form}>
                 <Text style={styles.heading}>List your property</Text>
                 <View style={{marginTop:10}}>
@@ -58,10 +66,10 @@ export default class HomeScreen extends React.Component {
                 <View style={{position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center'}}>
                   <WebView
                     ref={ wv => this.mapRef = wv}
-                    style={{flex: 1, width: 380, height: 400}}
+                    style={{flex: 1, width: 400, height: 300}}
                     javaScriptEnabled={true}
                     scalesPageToFit={false}
-                    source={{html:iframe}}
+                    source={{html:this.state.mapSource}}
                   />
               </View>
               </View>) : null;
