@@ -9,12 +9,23 @@ import {
   View,
   ImageBackground,
   TextInput,
-  WebView
+  WebView,
+  Animated,
+  Easing
 } from 'react-native';
 import { WebBrowser, Font } from 'expo';
-import { GOOGLE_MAPS_EMBED_APIKEY } from 'react-native-dotenv'
-
+import { GOOGLE_MAPS_EMBED_APIKEY, GOOGLE_MAPS_PLACES_APIKEY } from 'react-native-dotenv'
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { MonoText } from '../components/StyledText';
+
+
+const Buttons = (props) => (
+  <View style={styles.buttonContainer}>
+                    <TouchableOpacity  style={styles.procedeBtn}>
+                      <Text style={styles.buttonText} onPress={props.procede}>Confirm Address</Text>
+                    </TouchableOpacity>
+                  </View>
+);
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
@@ -25,9 +36,11 @@ export default class HomeScreen extends React.Component {
     super();
     this.state = {
       fontsLoaded: false,
-      addressSearch: '3911%20zuni%20st'
+      addressSearch: "1624%20Market%20St%20%23211%2C%20Denver%2C%20CO%2080202",
+      mapSource: this.getMapSource("1624%20Market%20St%20%23211%2C%20Denver%2C%20CO%2080202")
     };
     this.mapRef;
+    this.animateValue = new Animated.Value(0);
   }
 
   async componentDidMount() {
@@ -38,16 +51,31 @@ export default class HomeScreen extends React.Component {
     this.setState(prevState => { return {fontsLoaded: true} });
   }
 
+slideUp () {
+  this.animateValue.setValue(0);
+  Animated.timing(
+    this.animateValue,
+    {
+      toValue: 1,
+      duration: 500,
+      easing: Easing.ease
+    }
+  ).start(() => {});
+}
+
+  getMapSource(src) {
+    return `<iframe width="400" height="300" frameborder="0" style="border:0"src="https://www.google.com/maps/embed/v1/place?q=${src}&key=${GOOGLE_MAPS_EMBED_APIKEY}" allowfullscreen></iframe>`
+  }
+
   addressOnChangeText(text) {
     // this.mapRef && this.mapRef.reload();
     this.setState(prevState => ({addressSearch:text}));
     
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(() => {
-      if (this.state.addressSearch.length > 3) {
-        this.setState(prevState => ({mapSource:`<iframe width="400" height="300" frameborder="0" style="border:0"src="https://www.google.com/maps/embed/v1/place?q=${this.state.addressSearch}&key=${GOOGLE_MAPS_EMBED_APIKEY}" allowfullscreen></iframe>`}));
-      }
-    }, 1000);
+    this.setState(prevState => ({mapSource:this.getMapSource(this.state.addressSearch)}));
+  }
+
+  procede() {
+    this.slideUp();
   }
 
   render() {
@@ -57,13 +85,9 @@ export default class HomeScreen extends React.Component {
                 <Text style={styles.heading}>List your property</Text>
                 <View style={{marginTop:10}}>
                   <Text style={styles.label}>Enter an Address</Text>
-                  <TextInput
-                    autoCapitalize={'none'}
-                    autoCorrect={false}
-                    style={styles.input}
-                    onChangeText={this.addressOnChangeText.bind(this)} />
+                  
                 </View>
-                <View style={{position: 'absolute', top: '40%', left: 0, right: 0, alignItems: 'center'}}>
+                <View style={{position: 'absolute', top: '41%', left: 0, right: 0, alignItems: 'center'}}>
                   <WebView
                     ref={ wv => this.mapRef = wv}
                     style={{flex: 1, width: 400, height: 300}}
@@ -72,13 +96,80 @@ export default class HomeScreen extends React.Component {
                     source={{html:this.state.mapSource}}
                   />
               </View>
+              <GooglePlacesAutocomplete
+                  placeholder='1624 Market St #211, Denver, CO 80202'
+                  minLength={2} // minimum length of text to search
+                  autoFocus={true}
+                  returnKeyType={'search'} // Can be left out for default return key https://facebook.github.io/react-native/docs/textinput.html#returnkeytype
+                  listViewDisplayed='auto'    // true/false/undefined
+                  fetchDetails={true}
+                  onPress={(data, details = null) => { // 'details' is provided when fetchDetails = true
+                    this.addressOnChangeText(data.description)
+                  }}
+                  
+                  getDefaultValue={() => ''}
+                  
+                  query={{
+                    key: GOOGLE_MAPS_PLACES_APIKEY,
+                    language: 'en', // language of the results
+                    types: 'address' // default: 'geocode'
+                  }}
+                  
+                  styles={{
+                    textInputContainer: {
+                      width: '100%',
+                      backgroundColor: 'transparent'
+                    },
+                    description: {
+                      fontWeight: 'bold'
+                    },
+                    predefinedPlacesDescription: {
+                      color: '#1faadb'
+                    },
+                    listView: {
+                      backgroundColor: 'white',
+                      width: 396,
+                      left: 10,
+                      borderBottomWidth: 1,
+                      borderBottomColor: '#CCCCCC'
+                    },
+                    poweredContainer: {
+                      display: 'none'
+                    }
+                  }}
+                  
+                  currentLocation={true} // Will add a 'Current location' button at the top of the predefined places list
+                  currentLocationLabel="Current location"
+                  nearbyPlacesAPI='GooglePlacesSearch' // Which API to use: GoogleReverseGeocoding or GooglePlacesSearch
+                  GoogleReverseGeocodingQuery={{
+                    // available options for GoogleReverseGeocoding API : https://developers.google.com/maps/documentation/geocoding/intro
+                  }}
+                  GooglePlacesSearchQuery={{
+                    // available options for GooglePlacesSearch API : https://developers.google.com/places/web-service/search
+                    rankby: 'distance'
+                  }}
+                  debounce={200} // debounce the requests in ms. Set to 0 to remove debounce. By default 0ms.
+                />
+                
               </View>) : null;
+      let translateY = this.animateValue.interpolate({
+         inputRange: [0, 1],
+          outputRange: [0, -1000],
+          useNativeDriver: true
+          });
+
     return (
       <View style={styles.container}>
           <View style={styles.container}>
             <ImageBackground style={styles.backgroundImage} source={require("../assets/images/bg.png")}>
-              {form}
+
             </ImageBackground>
+            <Animated.View style={StyleSheet.flatten([styles.backgroundImage, {transform:[{translateY:translateY}]}])}>
+              <ImageBackground style={styles.backgroundImage} source={require("../assets/images/bg.png")}>
+                {form}
+                <Buttons procede={this.procede.bind(this)} />
+              </ImageBackground>
+            </Animated.View>
           </View>
       </View>
     );
@@ -250,5 +341,32 @@ const styles = StyleSheet.create({
     fontStyle: "normal",
     letterSpacing: 0.45,
     color: "#5bd9fb"
+  },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: '5%',
+    left: 0,
+    right: 0,
+    height: null,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center'
+  },
+  procedeBtn: {
+    width: 158,
+    height: 49,
+    borderRadius: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderStyle: "solid",
+    borderWidth: 2,
+    borderColor: "#ffffff",
+  },
+  buttonText: {
+    color: 'white',
+    textAlign: 'center',
+    lineHeight: 48,
+    fontFamily: "NunitoSans",
+    fontSize: 18,
+    letterSpacing: 0.34,
   },
 });
